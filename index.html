@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pokémon GO Meta Pokémon Matchup Quiz</title>
+<title>Pokémon GO Typing Quiz 5 — Meta Pokémon Matchups</title>
 <style>
 :root { --bg1:#0f172a; --card:#ffffff; --ink:#172033; --muted:#64748b; --good:#16a34a; --bad:#dc2626; --accent:#2563eb; }
 * { box-sizing:border-box; }
@@ -34,9 +34,12 @@ select, input { width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-
 .option:hover { transform:translateY(-1px); border-color:#93c5fd; }
 .option.selected { border-color:var(--accent); background:#eff6ff; }
 .option.correct { border-color:var(--good); background:#dcfce7; color:#14532d; }
+.option.selected-correct { border-color:var(--accent); background:#dbeafe; color:#1e3a8a; }
 .option.incorrect { border-color:var(--bad); background:#fee2e2; color:#7f1d1d; }
 .option.missed { border-color:#f59e0b; background:#fef3c7; color:#78350f; }
-.actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; align-items:center; justify-content:space-between; }
+.actions-main { display:flex; gap:10px; flex-wrap:wrap; }
+.actions-nav { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-left:auto; }
 button { border:0; border-radius:14px; padding:12px 16px; font-weight:900; font-size:1rem; cursor:pointer; background:#e2e8f0; color:#0f172a; }
 button.primary { background:linear-gradient(135deg,#2563eb,#7c3aed); color:white; }
 button.good { background:#16a34a; color:white; }
@@ -54,7 +57,7 @@ button:disabled { opacity:.48; cursor:not-allowed; }
 </head>
 <body>
 <header>
-  <h1>Pokémon GO Meta Pokémon Matchup Quiz</h1>
+  <h1>Quiz 5: Meta Pokémon Matchups</h1>
   <p>Learn every Pokémon on your provided meta list across four topics: Super Effective Coverage, Not Very Effective Coverage, Weak To, and Resistance To.</p>
 </header>
 
@@ -82,11 +85,16 @@ button:disabled { opacity:.48; cursor:not-allowed; }
     <p class="prompt" id="prompt"></p>
     <div class="options" id="options"></div>
     <div class="actions">
-      <button class="primary" id="checkBtn">Check Answer</button>
-      <button id="showBtn">Show Answer</button>
-      <button id="prevBtn">Previous</button>
-      <button class="good" id="nextBtn">Next</button>
-      <button id="resetBtn">Reset Progress</button>
+      <div class="actions-main">
+        <button class="primary" id="checkBtn">Check Answer</button>
+        <button id="showBtn">Show Answer</button>
+      </div>
+      <div class="actions-nav">
+        <button id="hintBtn">Hint</button>
+        <button id="prevBtn">Previous Question</button>
+        <button class="good" id="nextBtn">Next Question</button>
+        <button id="resetBtn">Reset Progress</button>
+      </div>
     </div>
     <div class="feedback" id="feedback"></div>
   </section>
@@ -150,6 +158,23 @@ function toggleOption(opt, el) {
   if (selected.has(opt)) { selected.delete(opt); el.classList.remove("selected"); }
   else { selected.add(opt); el.classList.add("selected"); }
 }
+
+function showHint() {
+  if (!filtered.length) return;
+  const q = filtered[index];
+  const answerCount = Array.isArray(q.answers) ? q.answers.length : 0;
+  const word = answerCount === 1 ? 'answer' : 'answers';
+  const isAre = answerCount === 1 ? 'is' : 'are';
+  const optionWord = answerCount === 1 ? 'option' : 'options';
+
+  $("feedback").className = "feedback show";
+  $("feedback").innerHTML = `
+    <h3>💡 Hint</h3>
+    <p>There ${isAre} <strong>${answerCount}</strong> correct ${word} for this question.</p>
+    <p>Select exactly <strong>${answerCount}</strong> ${optionWord}, then press <strong>Check Answer</strong>.</p>
+  `;
+}
+
 function checkAnswer(showOnly=false) {
   if (!filtered.length) return;
   const q = filtered[index], answerSet = new Set(q.answers); checked = true;
@@ -173,6 +198,7 @@ function updateStats() {
   $("coverageStat").textContent = `Coverage: ${pct}%`; $("progressFill").style.width = pct + "%";
 }
 $("checkBtn").addEventListener("click", () => checkAnswer(false));
+$("hintBtn").addEventListener("click", showHint);
 $("showBtn").addEventListener("click", () => checkAnswer(true));
 $("nextBtn").addEventListener("click", () => { if (!filtered.length) return; index = (index + 1) % filtered.length; render(); });
 $("prevBtn").addEventListener("click", () => { if (!filtered.length) return; index = (index - 1 + filtered.length) % filtered.length; render(); });
